@@ -211,7 +211,8 @@ def compare_countries():
 
 @app.route('/check_for_updates', methods=['POST'])
 def check_for_updates():
-    version = '1.4.3'
+    data = request.get_json()
+    version = data['version']
     latest = "1.6.0"
     ver_str = version.replace(".", "")
     data = {}
