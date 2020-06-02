@@ -18,8 +18,17 @@ def home():
     return "<h3>Source Code at <a href='https://github.com/prateekKrOraon/covid-19-tracker-api'>GitHub</a></h3><h3>COVID-19 Tracker Flutter Application - <a href='https://github.com/prateekKrOraon/covid19_tracker'>GitHub</a></h3>"
 
 
+@app.route("/india/state_data/")
+def india_state_data_error():
+    return jsonify({"error_message": "State code unavailable.", "example_link": "https://api-covid19-tracker.herokuapp.com/india/state_data/JH"})
+
+
 @app.route("/india/state_data/<state_code>")
 def india_state_data(state_code):
+    from constants import state_codes
+    if state_code not in state_codes.keys():
+        return jsonify({"message": "Invalid State Code"})
+
     response = {}
     res = requests.get("https://api.covid19india.org/v2/state_district_wise.json")
     state_district_wise = res.json()
@@ -51,6 +60,24 @@ def india_state_data(state_code):
             zones_res[key] = value
 
     response['zones'] = zones_res
+
+    res = requests.get("https://api.covid19india.org/state_test_data.json")
+    tested_data = res.json()
+    list_data = tested_data['states_tested_data']
+
+    test_info = {}
+    for i in range(len(list_data)-1, -1, -1):
+        if state_code in state_codes.keys() and list_data[i]['state'] == state_codes[state_code]:
+            test_info['total_tested'] = list_data[i]['totaltested']
+            test_info['last_update'] = list_data[i]['updatedon']
+            test_info['source'] = list_data[i]['source1']
+            break
+
+    if len(test_info) == 0:
+        response['test_data'] = {"last_update": "", "total_tested": "0", "source": ""}
+    else:
+        response['test_data'] = test_info
+
     return jsonify(response)
 
 
@@ -58,7 +85,15 @@ def india_state_data(state_code):
 def india_state_wise():
     res = requests.get("https://api.covid19india.org/data.json")
     data = res.json()
-    response = {'statewise': data['statewise'], 'total_tested': data['tested'][len(data['tested']) - 1]}
+    state_wise = data['statewise']
+    for i in range(len(state_wise)):
+        key = state_wise[i]['state'].lower().replace(" ", "_")
+        if key in states_and_districts.keys():
+            state_wise[i]['state_hi'] = states_and_districts[key]
+        else:
+            state_wise[i]['state_hi'] = state_wise[i]['state']
+
+    response = {'statewise': state_wise, 'total_tested': data['tested'][len(data['tested']) - 1]}
     return jsonify(response)
 
 
@@ -140,7 +175,16 @@ def world_data():
     res = requests.get("https://corona.lmao.ninja/v2/all")
     response['total'] = res.json()
     res = requests.get("https://corona.lmao.ninja/v2/countries?sort=cases")
-    response['country_wise'] = res.json()
+    data = res.json()
+    for i in range(len(data)):
+        country = data[i]
+        key = country['country'].lower().replace(" ", "_")
+        if key in countries_hi.keys():
+            data[i]['country_hi'] = countries_hi[key]
+        else:
+            data[i]['country_hi'] = country['country']
+
+    response['country_wise'] = data
     return jsonify(response)
 
 
@@ -150,6 +194,11 @@ def global_time_series():
     response = res.json()
     del response['count']
     return jsonify(response)
+
+
+@app.route('/country')
+def country_data_error():
+    return jsonify({"error_message": "Country code unavailable.", "example_link": "https://api-covid19-tracker.herokuapp.com/country/USA"})
 
 
 @app.route('/country/<iso3>')
@@ -194,12 +243,24 @@ def compare_countries():
     if country_one == "error":
         response_one['country'] = "error"
     else:
+        key = country_one_details['country'].lower().replace(" ", "_")
+        if key in countries_hi.keys():
+            country_one_details['country_hi'] = countries_hi[key]
+        else:
+            country_one_details['country_hi'] = country_one_details['country']
+
         response_one['details'] = country_one_details
         response_one['result'] = country_one_data['result']
 
     if country_two == "error":
         response_two['country'] = "error"
     else:
+        key = country_two_details['country'].lower().replace(" ", "_")
+        if key in countries_hi.keys():
+            country_two_details['country_hi'] = countries_hi[key]
+        else:
+            country_two_details['country_hi'] = country_two_details['country']
+
         response_two['details'] = country_two_details
         response_two['result'] = country_two_data['result']
 
@@ -236,6 +297,18 @@ def faqs(lang_code):
         return jsonify(faqs_hi)
     else:
         return jsonify({"message": "Language not available"})
+
+
+@app.route('/resources')
+def resources():
+    res = requests.get("https://api.covid19india.org/resources/resources.json")
+    return jsonify(res.json())
+
+
+@app.route('/sources')
+def sources():
+    res = requests.get('https://api.covid19india.org/sources_list.json')
+    return jsonify(res.json())
 
 
 @app.route('/update_logs/<lang_code>')
