@@ -97,6 +97,100 @@ def india_state_wise():
     return jsonify(response)
 
 
+@app.route("/india/on_date/")
+def india_state_wise_on_date_error():
+    return jsonify({'message': 'Specify date as YYYY-MM-DD', 'example_link' : 'api-covid19-tracker.herokuapp.com/india/on_date/2020-06-07'})
+
+
+@app.route("/india/on_date/<date>")
+def india_state_wise_on_date(date):
+    from constants import state_codes
+    res = requests.get("https://api.covid19india.org/v3/data-{}.json".format(date))
+    data = res.json()
+    response = {}
+    state_wise = []
+    for key in data.keys():
+        state = {
+            'lastupdatedtime': '{day}/{month}/{year} 23:59:59'.format(
+                day=date[8:10],
+                month=date[5:7],
+                year=date[0:4]),
+            'state': state_codes[key],
+            'statecode': key
+        }
+        if state_codes[key].lower().replace(" ", "_") in states_and_districts.keys():
+            state['state_hi'] = states_and_districts[state_codes[key].lower().replace(" ", "_")]
+        else:
+            state['state_hi'] = state_codes[key]
+
+        state['statenotes'] = ""
+
+        if 'confirmed' in data[key]['total'].keys():
+            state['confirmed'] = "{}".format(data[key]['total']['confirmed'])
+        else:
+            state['confirmed'] = "0"
+
+        if 'deceased' in data[key]['total'].keys():
+            state['deaths'] = "{}".format(data[key]['total']['deceased'])
+        else:
+            state['deaths'] = "0"
+
+        if 'recovered' in data[key]['total'].keys():
+            state['recovered'] = "{}".format(data[key]['total']['recovered'])
+        else:
+            state['recovered'] = "0"
+
+        if 'migrated' in data[key]['total'].keys():
+            state['migratedother'] = "{}".format(data[key]['total']['migrated'])
+        else:
+            state['migratedother'] = "0"
+
+        if key == 'TT' and 'tested' in data[key]['total'].keys():
+            total_tested = {}
+            total_tested['totalsamplestested'] = "{}".format(data[key]['total']['tested'])
+            total_tested['totalindividualstested'] = ""
+            if 'meta' in data[key].keys():
+                if 'tested' in data[key]['meta'].keys():
+                    total_tested['updatetimestamp'] = "{day}/{month}/{year} 09:00:00".format(
+                        day=data[key]['meta']['tested']['last_updated'][8:10],
+                        month=data[key]['meta']['tested']['last_updated'][5:7],
+                        year=data[key]['meta']['tested']['last_updated'][0:4])
+                    total_tested['source'] = data[key]['meta']['tested']['source']
+            response['total_tested'] = total_tested
+
+        else:
+            state['migratedother'] = "0"
+
+        state['active'] = "{}".format(int(state['confirmed'])-int(state['recovered'])-int(state['deaths']))
+
+        if 'delta' in data[key].keys():
+            if 'confirmed' in data[key]['delta'].keys():
+                state['deltaconfirmed'] = "{}".format(data[key]['delta']['confirmed'])
+            else:
+                state['deltaconfirmed'] = "0"
+
+            if 'deceased' in data[key]['delta'].keys():
+                state['deltadeaths'] = "{}".format(data[key]['delta']['deceased'])
+            else:
+                state['deltadeaths'] = "0"
+
+            if 'recovered' in data[key]['delta'].keys():
+                state['deltarecovered'] = "{}".format(data[key]['delta']['recovered'])
+            else:
+                state['deltarecovered'] = "0"
+        else:
+            state['deltaconfirmed'] = "0"
+            state['deltadeaths'] = "0"
+            state['deltarecovered'] = "0"
+
+        state_wise.append(state)
+
+    state_wise = sorted(state_wise, key=lambda i: int(i['confirmed']), reverse=True)
+    response['statewise'] = state_wise
+
+    return jsonify(response)
+
+
 @app.route("/india/time_series")
 def india_time_series():
     res = requests.get("https://api.covid19india.org/data.json")

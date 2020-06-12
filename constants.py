@@ -370,6 +370,7 @@ states_hindi = {
         }
 
 state_codes = {
+    "TT": "Total",
     "AN": "Andaman and Nicobar Islands",
     "AP": "Andhra Pradesh",
     "AR": "Arunachal Pradesh",

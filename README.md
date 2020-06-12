@@ -5,10 +5,11 @@ This API is used by [COVID-19 Tracker](https://github.com/prateekKrOraon/covid19
 
 |Data|URL|
 |----|----|
-|India Time Series|https://api-covid19-tracker.herokuapp.com/india/time_series|
-|Indian State Data|https://api-covid19-tracker.herokuapp.com/india/state_data/<state_code>|
-|Indian State Wise Data|https://api-covid19-tracker.herokuapp.com/india/state_wise|
-|Indian State Wise Time Series|https://api-covid19-tracker.herokuapp.com/india/states_time_series|
+|India: Time Series|https://api-covid19-tracker.herokuapp.com/india/time_series|
+|India: State Data|https://api-covid19-tracker.herokuapp.com/india/state_data/<state_code>|
+|India: State Wise Data|https://api-covid19-tracker.herokuapp.com/india/state_wise|
+|India: State Wise Time Series|https://api-covid19-tracker.herokuapp.com/india/states_time_series|
+|India: State Wise Data (For any particular date.)|https://api-covid19-tracker.herokuapp.com/india/on_date/<{YYYY-MM-DD}>|
 |Global Data: Time Series|https://api-covid19-tracker.herokuapp.com/global_time_series|
 |Global Data: Country wise information|https://api-covid19-tracker.herokuapp.com/global_data|
 |Global Data: Country information|https://api-covid19-tracker.herokuapp.com/country/<iso3_code>|
