@@ -106,7 +106,12 @@ def india_state_wise_on_date_error():
 def india_state_wise_on_date(date):
     from constants import state_codes
     res = requests.get("https://api.covid19india.org/v3/data-{}.json".format(date))
-    data = res.json()
+    data = None
+    try:
+        data = res.json()
+    except JSONDecodeError:
+        return jsonify({"message": "Data not available"})
+
     response = {}
     state_wise = []
     for key in data.keys():
@@ -145,8 +150,8 @@ def india_state_wise_on_date(date):
         else:
             state['migratedother'] = "0"
 
+        total_tested = {}
         if key == 'TT' and 'tested' in data[key]['total'].keys():
-            total_tested = {}
             total_tested['totalsamplestested'] = "{}".format(data[key]['total']['tested'])
             total_tested['totalindividualstested'] = ""
             if 'meta' in data[key].keys():
@@ -156,10 +161,13 @@ def india_state_wise_on_date(date):
                         month=data[key]['meta']['tested']['last_updated'][5:7],
                         year=data[key]['meta']['tested']['last_updated'][0:4])
                     total_tested['source'] = data[key]['meta']['tested']['source']
-            response['total_tested'] = total_tested
-
         else:
-            state['migratedother'] = "0"
+            total_tested['totalsamplestested'] = ""
+            total_tested['totalindividualstested'] = ""
+            total_tested['updatetimestamp'] = ""
+            total_tested['source'] = ""
+
+        response['total_tested'] = total_tested
 
         state['active'] = "{}".format(int(state['confirmed'])-int(state['recovered'])-int(state['deaths']))
 
