@@ -1,10 +1,12 @@
+from json import JSONDecodeError
+
 from flask import Flask
 from flask import request
 from flask import jsonify
 from flask import make_response
 import requests
 import json
-from constants import iso3_codes
+from constants import iso3_codes, states_and_districts, countries_hi
 from constants import faqs_hi
 from constants import faqs_en
 from constants import states

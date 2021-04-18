@@ -1754,3 +1754,4 @@ countries_hi = {
     "yugoslavia": "यूगोस्लाविया",
     "zambia": "जाम्बिया",
     "zimbabwe": "जिम्बाब्वे"
+}
